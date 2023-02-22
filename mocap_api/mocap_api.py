@@ -430,7 +430,7 @@ class MCPAvatar(object):
 
     def get_name(self):
         avatar_name = c_char_p()
-        err = self.api.contents.GetAvatarName(pointer(avatar_name), self.handle)
+        err = self.api.contents.GetName(pointer(avatar_name), self.handle)
         if err != MCPError.NoError:
             raise RuntimeError('Can not get avatar name: {0}'.format(MCPError._fields[err]))
         return str(avatar_name.value, encoding='utf8')
@@ -707,6 +707,28 @@ class MCPRenderSettings(object):
         if err != MCPError.NoError:
             raise RuntimeError('Can not get unit: {0}'.format(MCPError._fields[err]))
         return unit.value
+
+#CT 2.21.2023
+MCPCommandHandle = c_uint64
+class MCPCommand(object):
+    IMCPCommandApi_Version = c_char_p(b'PROC_TABLE:IMCPCommand_001') #unsure of api version
+    class MCPCommandApi(Structure):
+        _fields_ = [
+            ('CreateCommand', CFUNCTYPE(c_int32, c_uint32, MCPCommandHandle)),
+            ('GetCommandResultCode', CFUNCTYPE(c_int32, POINTER(c_uint32), MCPCommandHandle)),
+            ('DestroyCommand', CFUNCTYPE(c_int32, MCPCommandHandle)),
+        ]
+    
+    api = POINTER(MCPCommandApi)()
+    
+    def __init__(self):
+        if not self.api:
+            err = MocapApi.MCPGetGenericInterface(self.IMCPCommandApi_Version, pointer(self.api))
+            if err != MCPError.NoError:
+                raise RuntimeError('Can not get IMCPApplication interface: {0}'.format(MCPError._fields[err]))
+        self.handle = MCPApplicationHandle()
+    
+    
 
 MCPApplicationHandle = c_uint64
 class MCPApplication(object):
