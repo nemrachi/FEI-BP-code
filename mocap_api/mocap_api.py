@@ -7,7 +7,7 @@ import os
 MocapApi = cdll.LoadLibrary(os.path.join(os.path.dirname(__file__), {
     'DarWin' : '',
     'Linux' : '',
-    'Windows' : 'windows/MocapApi.dll'
+    'Windows' : '../windows/MocapApi.dll'
 }[system()]))
 
 MCPError = namedtuple('EMCPError', [
