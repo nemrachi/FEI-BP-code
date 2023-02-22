@@ -514,6 +514,7 @@ class MCPSettings(object):
             ('CreateSettings', CFUNCTYPE(c_int32, POINTER(MCPSettingsHandle))),
             ('DestroySettings', CFUNCTYPE(c_int32, MCPSettingsHandle)),
             ('SetSettingsUDP', CFUNCTYPE(c_int32, c_uint16, MCPSettingsHandle)),
+            ('SetSettingsUDPServer', CFUNCTYPE(c_int32, c_char_p, c_uint16, MCPSettingsHandle)),
             ('SetSettingsTCP', CFUNCTYPE(c_int32, c_char_p, c_uint16, MCPSettingsHandle)),
             ('SetSettingsBvhRotation', CFUNCTYPE(c_int32, c_int32, MCPSettingsHandle)),
             ('SetSettingsBvhDisplacement', CFUNCTYPE(c_int32, c_int32, MCPSettingsHandle)),
@@ -542,6 +543,11 @@ class MCPSettings(object):
         err = self.api.contents.SetSettingsUDP(c_uint16(local_port), self.handle)
         if err != MCPError.NoError:
             raise RuntimeError('Can not set udp port of {0}: {1}'.format(local_port, MCPError._fields[err]))
+            
+    def set_udp_server(self, ip, port):
+        err = self.api.contents.SetSettingsUDPServer(c_char_p(bytes(ip, encoding='utf8')), c_uint16(port), self.handle)
+        if err != MCPError.NoError:
+            raise RuntimeError('Can not settings udp addr of {0}:{1}: {2}'.format(ip, port, MCPError._fields[err]))
 
     def set_tcp(self, ip, port):
         err = self.api.contents.SetSettingsTCP(c_char_p(bytes(ip, encoding='utf8')), c_uint16(port), self.handle)
@@ -856,7 +862,7 @@ if __name__ == '__main__':
 
     app = MCPApplication()
     settings = MCPSettings()
-    settings.set_udp(7001)
+    settings.set_udp(7002)
     app.set_settings(settings)
     app.open()
     while True:
