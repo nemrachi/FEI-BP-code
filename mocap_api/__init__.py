@@ -12,6 +12,7 @@ from .mocap_api import MCPBvhRotation
 from .mocap_api import MCPBvhData
 from .mocap_api import MCPBvhDisplacement
 from .mocap_api import MCPSettings
+from .mocap_api import MCPCommands
 from .mocap_api import MCPCommand
 from .mocap_api import MCPUpVector
 from .mocap_api import MCPFrontVector

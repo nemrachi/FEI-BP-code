@@ -713,14 +713,28 @@ class MCPRenderSettings(object):
         if err != MCPError.NoError:
             raise RuntimeError('Can not get unit: {0}'.format(MCPError._fields[err]))
         return unit.value
-
 #CT 2.21.2023
+MCPCommands = namedtuple('EMCPCommand', [
+        'CommandStartCapture',
+        'CommandStopCapture',
+        'CommandZeroPosition',
+        'CommandCalibrateMotion',
+        'CommandStartRecored',
+        'CommandStopRecored',
+        'CommandResumeOriginalPosture',
+])(0, 1, 2, 3, 4, 5, 6)
+
+MCPCommandStopCatpureExtraFlag = namedtuple('EMCPCommandStopCatpureExtraFlag', [
+        'StopCatpureExtraFlag_SensorsModulesPowerOff',
+        'StopCatpureExtraFlag_SensorsModulesHibernate',
+])(0, 1)
 MCPCommandHandle = c_uint64
 class MCPCommand(object):
     IMCPCommandApi_Version = c_char_p(b'PROC_TABLE:IMCPCommand_001') #unsure of api version
     class MCPCommandApi(Structure):
         _fields_ = [
-            ('CreateCommand', CFUNCTYPE(c_int32, c_uint32, MCPCommandHandle)),
+            ('CreateCommand', CFUNCTYPE(c_int32, c_uint32, POINTER(MCPCommandHandle))),
+            ('SetCommandExtraFlags', CFUNCTYPE(c_int32, c_uint32, MCPCommandHandle)),
             ('GetCommandResultCode', CFUNCTYPE(c_int32, POINTER(c_uint32), MCPCommandHandle)),
             ('DestroyCommand', CFUNCTYPE(c_int32, MCPCommandHandle)),
         ]
@@ -731,10 +745,21 @@ class MCPCommand(object):
         if not self.api:
             err = MocapApi.MCPGetGenericInterface(self.IMCPCommandApi_Version, pointer(self.api))
             if err != MCPError.NoError:
-                raise RuntimeError('Can not get IMCPApplication interface: {0}'.format(MCPError._fields[err]))
-        self.handle = MCPApplicationHandle()
-    
-    
+                raise RuntimeError('Can not get IMCPCommand interface: {0}'.format(MCPError._fields[err]))
+        self.handle = MCPCommandHandle()
+
+    def command(self, command):
+        # print(c_uint32(command))
+        err = self.api.contents.CreateCommand(c_uint32(command), pointer(self.handle))
+        if err != MCPError.NoError:
+            raise RuntimeError('Can not CreateCommand: {0}'.format(MCPError._fields[err]))
+        # err1 = self.api.contents.CreateCommand(MCPCommandStopCatpureExtraFlag.StopCatpureExtraFlag_SensorsModulesHibernate, self.handle)
+        # if err1 != MCPError.NoError:
+        #     raise RuntimeError('Can not CreateCommand: {0}'.format(MCPError._fields[err1]))
+        # err = self.api.contents.GetCommandResultCode(c_uint32(command), pointer(self.handle))
+        # if err != MCPError.NoError:
+        #     raise RuntimeError('Can not CreateCommand: {0}'.format(MCPError._fields[err]))
+        
 
 MCPApplicationHandle = c_uint64
 class MCPApplication(object):
@@ -850,32 +875,16 @@ class MCPApplication(object):
         return [evt_array[i] for i in range(evt_count.value)]
 
 if __name__ == '__main__':
-    def print_joint(joint):
-        print(joint.get_name())
-        print(joint.get_local_rotation())
-        print(joint.get_local_rotation_by_euler())
-        print(joint.get_local_position())
-        
-        children = joint.get_children()
-        for child in children:
-            print_joint(child)
-
-    app = MCPApplication()
+    mocap_app = MCPApplication()
     settings = MCPSettings()
+    mocap_app.set_settings(settings)
+    # settings.set_tcp('127.0.0.1', 7001)
     settings.set_udp(7002)
-    app.set_settings(settings)
-    app.open()
-    while True:
-        evts = app.poll_next_event()
-        for evt in evts:
-            if evt.event_type == MCPEventType.AvatarUpdated:
-                avatar = MCPAvatar(evt.event_data.avatar_handle)
-                print(avatar.get_index())
-                print(avatar.get_name())
-                print_joint(avatar.get_root_joint())
-            elif evt.event_type == MCPEventType.RigidBodyUpdated:
-                print('rigid body updated')
-            else:
-                print('unknow event')
-
-        time.sleep(0.001)
+    status, msg = mocap_app.open()
+    if status:
+        print ('Connect Successful CT')
+    else:
+        print ({'ERROR'}, 'Connect failed: {0}'.format(msg))
+    command = MCPCommand()
+    command.command(MCPCommands.CommandStartRecored)
+    mocap_app.close()

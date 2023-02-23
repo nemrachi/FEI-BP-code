@@ -1,7 +1,8 @@
 # from mathutils import Vector, Matrix, Quaternion, Euler
 import time
-from .mocap_api import *
+from mocap_api import *
 import math
+
 
 mocap_app = None
 
@@ -28,7 +29,7 @@ def uninit_mocap_api():
         mocap_app.close()
     mocap_app = None
 
-def poll_data(ctx):
+def poll_data():
     mcp_evts = mocap_app.poll_next_event()
     for mcp_evt in mcp_evts:
         if mcp_evt.event_type == MCPEventType.AvatarUpdated:
@@ -36,69 +37,58 @@ def poll_data(ctx):
             # animate_armatures(ctx, avatar)
 
 def axisConnect():
-    global mocap_timer
+    # global mocap_timer
     settings = MCPSettings()
-    
-    settings.set_udp(7004)
-    # settings.set_udp_server(ctx.scene.nml_ip, ctx.scene.nml_port)
-    settings.set_bvh_data(MCPBvhData.Binary)
-    
     mocap_app.set_settings(settings)
+    # settings.set_tcp('127.0.0.1', 7001)
+    settings.set_udp_server('127.0.0.1', 7001)
+    # settings.set_bvh_data(MCPBvhData.Binary)
+    
+    
     if mocap_app.is_opened() :
         mocap_app.close()
     status, msg = mocap_app.open()
+    print(status)
     if status:
-        return ('Connect Successful CT')
+        print ('Connect Successful CT')
     else:
-        return ({'ERROR'}, 'Connect failed: {0}'.format(msg))
-
-    # def modal(self, ctx, evt):
-    #     if evt.type == 'TIMER':
-    #         poll_data(ctx)
-    #     if not ctx.scene.nml_living:
-    #         return {'FINISHED'}
-    #     return {'PASS_THROUGH'}
+        print ({'ERROR'}, 'Connect failed: {0}'.format(msg))
 
 def axisDisconnect():
     global mocap_timer
     status, msg = mocap_app.close()
     if not status:
-        return ({'ERROR'}, 'Disconnect failed: {0}'.format(msg))
-    return ('Disconnect Successful CT')
+        print ({'ERROR'}, 'Disconnect failed: {0}'.format(msg))
+    print ('Disconnect Successful CT')
 
 def axisStartRecord():
+    global mocap_app
+    mocap_app = MCPApplication()
+    settings = MCPSettings()
+    mocap_app.set_settings(settings)
+    # settings.set_tcp('127.0.0.1', 7001)
+    settings.set_udp_server('127.0.0.1', 7001)
+    status, msg = mocap_app.open()
+    if status:
+        print ('Connect Successful CT')
+    else:
+        print ({'ERROR'}, 'Connect failed: {0}'.format(msg))
+
+    
     command = MCPCommand()
+    command.command(MCPCommands.CommandStartRecored)
 
 def axisStopRecord():
     command = MCPCommand()
+    command.command(MCPCommands.CommandStopRecored)
+
+def stopCapture():
+    print("stopping capture")
+    command = MCPCommand()
+    command.command(MCPCommands.CommandStopCapture)
 
 if __name__ == '__main__':
-    def print_joint(joint):
-        print(joint.get_name())
-        print(joint.get_local_rotation())
-        print(joint.get_local_rotation_by_euler())
-        print(joint.get_local_position())
-        
-        children = joint.get_children()
-        for child in children:
-            print_joint(child)
-
-    app = MCPApplication()
-    settings = MCPSettings()
-    settings.set_udp(7004)
-    app.set_settings(settings)
-    app.open()
-    while True:
-        evts = app.poll_next_event()
-        for evt in evts:
-            if evt.event_type == MCPEventType.AvatarUpdated:
-                avatar = MCPAvatar(evt.event_data.avatar_handle)
-                print(avatar.get_index())
-                print(avatar.get_name())
-                print_joint(avatar.get_root_joint())
-            elif evt.event_type == MCPEventType.RigidBodyUpdated:
-                print('rigid body updated')
-            else:
-                print('unknow event')
-
-        time.sleep(0.001)
+    # init_mocap_api()
+    # axisConnect()
+    
+    axisStartRecord()
