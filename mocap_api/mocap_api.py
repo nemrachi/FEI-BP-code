@@ -769,8 +769,6 @@ class MCPCommand(object):
             raise RuntimeError('Can not GetCommandResultCode: {0}'.format(MCPError._fields[err]))
         print(resCode)
     
-        
-
 MCPApplicationHandle = c_uint64
 class MCPApplication(object):
     IMCPApplicationApi_Version = c_char_p(b'PROC_TABLE:IMCPApplication_002')
