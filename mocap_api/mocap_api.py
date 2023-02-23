@@ -735,6 +735,7 @@ class MCPCommand(object):
         _fields_ = [
             ('CreateCommand', CFUNCTYPE(c_int32, c_uint32, POINTER(MCPCommandHandle))),
             ('SetCommandExtraFlags', CFUNCTYPE(c_int32, c_uint32, MCPCommandHandle)),
+            ('GetCommandResultMessage', CFUNCTYPE(c_int32, POINTER(c_char_p), MCPCommandHandle)),
             ('GetCommandResultCode', CFUNCTYPE(c_int32, POINTER(c_uint32), MCPCommandHandle)),
             ('DestroyCommand', CFUNCTYPE(c_int32, MCPCommandHandle)),
         ]
@@ -748,17 +749,26 @@ class MCPCommand(object):
                 raise RuntimeError('Can not get IMCPCommand interface: {0}'.format(MCPError._fields[err]))
         self.handle = MCPCommandHandle()
 
-    def command(self, command):
+    def create_command(self, command):
         # print(c_uint32(command))
         err = self.api.contents.CreateCommand(c_uint32(command), pointer(self.handle))
         if err != MCPError.NoError:
             raise RuntimeError('Can not CreateCommand: {0}'.format(MCPError._fields[err]))
-        # err1 = self.api.contents.CreateCommand(MCPCommandStopCatpureExtraFlag.StopCatpureExtraFlag_SensorsModulesHibernate, self.handle)
-        # if err1 != MCPError.NoError:
-        #     raise RuntimeError('Can not CreateCommand: {0}'.format(MCPError._fields[err1]))
-        # err = self.api.contents.GetCommandResultCode(c_uint32(command), pointer(self.handle))
-        # if err != MCPError.NoError:
-        #     raise RuntimeError('Can not CreateCommand: {0}'.format(MCPError._fields[err]))
+        
+    def get_command_result_message(self):
+        resMessage = c_char_p()
+        err = self.api.contents.GetCommandResultMessage(pointer(resMessage), self.handle)
+        if err != MCPError.NoError:
+            raise RuntimeError('Can not GetCommandResultMessage: {0}'.format(MCPError._fields[err]))
+        print(resMessage)
+
+    def get_command_result_code(self):
+        resCode = c_uint32()
+        err = self.api.contents.GetCommandResultCode(pointer(resCode), self.handle)
+        if err != MCPError.NoError:
+            raise RuntimeError('Can not GetCommandResultCode: {0}'.format(MCPError._fields[err]))
+        print(resCode)
+    
         
 
 MCPApplicationHandle = c_uint64
@@ -777,7 +787,8 @@ class MCPApplication(object):
             ('CloseApplication', CFUNCTYPE(c_int32, MCPApplicationHandle)),
             ('GetApplicationRigidBodies', CFUNCTYPE(c_int32, POINTER(c_uint64), POINTER(c_uint32), MCPApplicationHandle)),
             ('GetApplicationAvatars', CFUNCTYPE(c_int32, POINTER(c_uint64), POINTER(c_uint32), MCPApplicationHandle)),
-            ('PollApplicationNextEvent', CFUNCTYPE(c_int32, POINTER(MCPEvent), POINTER(c_uint32), MCPApplicationHandle))
+            ('PollApplicationNextEvent', CFUNCTYPE(c_int32, POINTER(MCPEvent), POINTER(c_uint32), MCPApplicationHandle)),
+            ('QueuedServerCommand', CFUNCTYPE(c_int32, MCPCommandHandle, MCPApplicationHandle))
         ]
     api = POINTER(MCPApplicationApi)()
 
@@ -873,18 +884,29 @@ class MCPApplication(object):
         if evt_count.value == 0:
             return []
         return [evt_array[i] for i in range(evt_count.value)]
+    def queued_server_command(self, command):
+        err = self.api.contents.QueuedServerCommand(command.handle, self._handle)
+        if err != MCPError.NoError:
+            raise RuntimeError('Can not queue server command: {0}'.format(MCPError._fields[err]))
 
 if __name__ == '__main__':
-    mocap_app = MCPApplication()
+    # mocap_app = MCPApplication()
+    # settings = MCPSettings()
+    # # settings.set_tcp('127.0.0.1', 7001)
+    # settings.set_udp(7001)
+    # mocap_app.set_settings(settings)
+    # status, msg = mocap_app.open()
+    # if status:
+    #     print ('Connect Successful CT')
+    # else:
+    #     print ({'ERROR'}, 'Connect failed: {0}'.format(msg))
+    app = MCPApplication()
     settings = MCPSettings()
-    mocap_app.set_settings(settings)
-    # settings.set_tcp('127.0.0.1', 7001)
-    settings.set_udp(7002)
-    status, msg = mocap_app.open()
-    if status:
-        print ('Connect Successful CT')
-    else:
-        print ({'ERROR'}, 'Connect failed: {0}'.format(msg))
+    settings.set_udp(7001)
+    app.set_settings(settings)
+    app.open()
     command = MCPCommand()
-    command.command(MCPCommands.CommandStartRecored)
-    mocap_app.close()
+    command.create_command(MCPCommands.CommandStartRecored)
+    # command.get_command_result_code()
+    app.queued_server_command(command)
+    app.close()
