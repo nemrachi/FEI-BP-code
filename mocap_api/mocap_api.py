@@ -9,6 +9,7 @@ MocapApi = cdll.LoadLibrary(os.path.join(os.path.dirname(__file__), {
     'Linux' : '',
     'Windows' : '../windows/MocapApi.dll'
 }[system()]))
+# MocapApi = cdll.LoadLibrary('../windows/MocapApi.dll')
 
 MCPError = namedtuple('EMCPError', [
     'NoError',
@@ -742,18 +743,20 @@ class MCPCommand(object):
     
     api = POINTER(MCPCommandApi)()
     
-    def __init__(self):
+    def __init__(self, cmd):
         if not self.api:
             err = MocapApi.MCPGetGenericInterface(self.IMCPCommandApi_Version, pointer(self.api))
             if err != MCPError.NoError:
                 raise RuntimeError('Can not get IMCPCommand interface: {0}'.format(MCPError._fields[err]))
         self.handle = MCPCommandHandle()
-
-    def create_command(self, command):
-        # print(c_uint32(command))
-        err = self.api.contents.CreateCommand(c_uint32(command), pointer(self.handle))
+        err = self.api.contents.CreateCommand(c_uint32(cmd), pointer(self.handle))
         if err != MCPError.NoError:
             raise RuntimeError('Can not CreateCommand: {0}'.format(MCPError._fields[err]))
+
+    # def create_command(self, command):
+    #     err = self.api.contents.CreateCommand(c_uint32(command), pointer(self.handle))
+    #     if err != MCPError.NoError:
+    #         raise RuntimeError('Can not CreateCommand: {0}'.format(MCPError._fields[err]))
         
     def get_command_result_message(self):
         resMessage = c_char_p()
@@ -768,6 +771,11 @@ class MCPCommand(object):
         if err != MCPError.NoError:
             raise RuntimeError('Can not GetCommandResultCode: {0}'.format(MCPError._fields[err]))
         print(resCode)
+    def destroy_command(self):
+        err = self.api.contents.DestroyCommand(self.handle)
+        if err != MCPError.NoError:
+            raise RuntimeError('Can not GetCommandResultCode: {0}'.format(MCPError._fields[err]))
+
     
 MCPApplicationHandle = c_uint64
 class MCPApplication(object):
@@ -800,7 +808,6 @@ class MCPApplication(object):
         if err != MCPError.NoError:
             raise RuntimeError('Can not create application: {0}'.format(MCPError._fields[err]))
         self._is_opened = False
-    
     def __del__(self):
         err = self.api.contents.DestroyApplication(self._handle)
         if err != MCPError.NoError:
@@ -888,23 +895,49 @@ class MCPApplication(object):
             raise RuntimeError('Can not queue server command: {0}'.format(MCPError._fields[err]))
 
 if __name__ == '__main__':
-    # mocap_app = MCPApplication()
-    # settings = MCPSettings()
-    # # settings.set_tcp('127.0.0.1', 7001)
-    # settings.set_udp(7001)
-    # mocap_app.set_settings(settings)
-    # status, msg = mocap_app.open()
-    # if status:
-    #     print ('Connect Successful CT')
-    # else:
-    #     print ({'ERROR'}, 'Connect failed: {0}'.format(msg))
-    app = MCPApplication()
+    mocap_app = MCPApplication()
     settings = MCPSettings()
+    # settings.set_tcp('127.0.0.1', 7001)
     settings.set_udp(7001)
-    app.set_settings(settings)
-    app.open()
-    command = MCPCommand()
-    command.create_command(MCPCommands.CommandStartRecored)
-    # command.get_command_result_code()
-    app.queued_server_command(command)
-    app.close()
+    mocap_app.set_settings(settings)
+    status, msg = mocap_app.open()
+    if status:
+        print ('Connect Successful')
+    else:
+        print ({'ERROR'}, 'Connect failed: {0}'.format(msg))
+    startrec = MCPCommand(MCPCommands.CommandStartRecored)
+    # stoprec = MCPCommand(MCPCommands.CommandStopRecored)
+    # command.destroy_command()
+    # command.get_command_result_message()
+    # mocap_app.queued_server_command(startrec.handle)
+    mocap_app.close()
+    # def print_joint(joint):
+    #     print(joint.get_name())
+    #     print(joint.get_local_rotation())
+    #     print(joint.get_local_rotation_by_euler())
+    #     print(joint.get_local_position())
+        
+    #     children = joint.get_children()
+    #     for child in children:
+    #         print_joint(child)
+
+    # app = MCPApplication()
+    # settings = MCPSettings()
+    # settings.set_udp(7001)
+    # app.set_settings(settings)
+    # app.open()
+    # startrec = MCPCommand(MCPCommands.CommandStartRecored)
+    # while True:
+    #     evts = app.poll_next_event()
+    #     for evt in evts:
+    #         if evt.event_type == MCPEventType.AvatarUpdated:
+    #             avatar = MCPAvatar(evt.event_data.avatar_handle)
+    #             print(avatar.get_index())
+    #             # print(avatar.get_name())
+    #             print_joint(avatar.get_root_joint())
+    #         elif evt.event_type == MCPEventType.RigidBodyUpdated:
+    #             print('rigid body updated')
+    #         else:
+    #             print('unknow event')
+
+    #     time.sleep(10)

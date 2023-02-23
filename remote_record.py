@@ -1,15 +1,4 @@
-# from mathutils import Vector, Matrix, Quaternion, Euler
-import time
 from mocap_api import *
-import math
-
-
-mocap_app = None
-
-mocap_timer = None
-
-# {key:object_name, value:{key:bone_name, value:[(time_delta, location, rotation_quaternion, scale)]}}
-record_data = None
 
 def init_mocap_api():
     global mocap_app
