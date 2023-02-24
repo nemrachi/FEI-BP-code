@@ -32,8 +32,6 @@ def axisConnect():
     # settings.set_tcp('127.0.0.1', 7001)
     settings.set_udp_server('127.0.0.1', 7001)
     # settings.set_bvh_data(MCPBvhData.Binary)
-    
-    
     if mocap_app.is_opened() :
         mocap_app.close()
     status, msg = mocap_app.open()
@@ -44,40 +42,24 @@ def axisConnect():
         print ({'ERROR'}, 'Connect failed: {0}'.format(msg))
 
 def axisDisconnect():
-    global mocap_timer
     status, msg = mocap_app.close()
     if not status:
         print ({'ERROR'}, 'Disconnect failed: {0}'.format(msg))
     print ('Disconnect Successful CT')
 
 def axisStartRecord():
-    global mocap_app
-    mocap_app = MCPApplication()
-    settings = MCPSettings()
-    mocap_app.set_settings(settings)
-    # settings.set_tcp('127.0.0.1', 7001)
-    settings.set_udp_server('127.0.0.1', 7001)
-    status, msg = mocap_app.open()
-    if status:
-        print ('Connect Successful CT')
-    else:
-        print ({'ERROR'}, 'Connect failed: {0}'.format(msg))
-
+    err = MCPCommand(MCPCommands.CommandStartRecored)
     
-    command = MCPCommand()
-    command.command(MCPCommands.CommandStartRecored)
 
 def axisStopRecord():
-    command = MCPCommand()
-    command.command(MCPCommands.CommandStopRecored)
+    command = MCPCommand(MCPCommands.CommandStopRecored)
 
 def stopCapture():
     print("stopping capture")
-    command = MCPCommand()
-    command.command(MCPCommands.CommandStopCapture)
+    command = MCPCommand(MCPCommands.CommandStopCapture)
 
 if __name__ == '__main__':
-    # init_mocap_api()
-    # axisConnect()
-    
+    init_mocap_api()
+    axisConnect()
     axisStartRecord()
+    axisDisconnect()

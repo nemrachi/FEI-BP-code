@@ -27,8 +27,14 @@ MCPError = namedtuple('EMCPError', [
     'NoneMessage',
     'NoneParent',
     'NoneChild',
-    'AddressInUse'
-])._make(range(16))
+    'AddressInUse',
+    'ServerNotReady',
+    'ClientNotReady',
+    'IncompleteCommand',
+    'UDP',
+    'TCP',
+    'QueuedCommandFaild',
+])._make(range(22))
 
 MCPJointTag = namedtuple('EMCPJointTag', [
     'Hips',
@@ -476,6 +482,7 @@ MCPEventType = namedtuple('EMCPEventType', [
     'AvatarUpdated', 
     'RigidBodyUpdated',
     'Error'
+    
 ])(0, 256, 512, 768)
 
 class MCPEvent(Structure):
@@ -723,7 +730,8 @@ MCPCommands = namedtuple('EMCPCommand', [
         'CommandStartRecored',
         'CommandStopRecored',
         'CommandResumeOriginalPosture',
-])(0, 1, 2, 3, 4, 5, 6)
+])._make(range(7))
+
 
 MCPCommandStopCatpureExtraFlag = namedtuple('EMCPCommandStopCatpureExtraFlag', [
         'StopCatpureExtraFlag_SensorsModulesPowerOff',
@@ -731,7 +739,7 @@ MCPCommandStopCatpureExtraFlag = namedtuple('EMCPCommandStopCatpureExtraFlag', [
 ])(0, 1)
 MCPCommandHandle = c_uint64
 class MCPCommand(object):
-    IMCPCommandApi_Version = c_char_p(b'PROC_TABLE:IMCPCommand_001') #unsure of api version
+    IMCPCommandApi_Version = c_char_p(b'PROC_TABLE:IMCPCommand_001')
     class MCPCommandApi(Structure):
         _fields_ = [
             ('CreateCommand', CFUNCTYPE(c_int32, c_uint32, POINTER(MCPCommandHandle))),
@@ -749,15 +757,11 @@ class MCPCommand(object):
             if err != MCPError.NoError:
                 raise RuntimeError('Can not get IMCPCommand interface: {0}'.format(MCPError._fields[err]))
         self.handle = MCPCommandHandle()
+        # print(self.handle)
         err = self.api.contents.CreateCommand(c_uint32(cmd), pointer(self.handle))
         if err != MCPError.NoError:
             raise RuntimeError('Can not CreateCommand: {0}'.format(MCPError._fields[err]))
-
-    # def create_command(self, command):
-    #     err = self.api.contents.CreateCommand(c_uint32(command), pointer(self.handle))
-    #     if err != MCPError.NoError:
-    #         raise RuntimeError('Can not CreateCommand: {0}'.format(MCPError._fields[err]))
-        
+        print(self.handle)
     def get_command_result_message(self):
         resMessage = c_char_p()
         err = self.api.contents.GetCommandResultMessage(pointer(resMessage), self.handle)
@@ -766,6 +770,7 @@ class MCPCommand(object):
         print(resMessage)
 
     def get_command_result_code(self):
+        print(self.handle)
         resCode = c_uint32()
         err = self.api.contents.GetCommandResultCode(pointer(resCode), self.handle)
         if err != MCPError.NoError:
@@ -803,7 +808,9 @@ class MCPApplication(object):
             err = MocapApi.MCPGetGenericInterface(self.IMCPApplicationApi_Version, pointer(self.api))
             if err != MCPError.NoError:
                 raise RuntimeError('Can not get IMCPApplication interface: {0}'.format(MCPError._fields[err]))
+        
         self._handle = MCPApplicationHandle()
+        print(self._handle)
         err = self.api.contents.CreateApplication(pointer(self._handle))
         if err != MCPError.NoError:
             raise RuntimeError('Can not create application: {0}'.format(MCPError._fields[err]))
@@ -897,8 +904,9 @@ class MCPApplication(object):
 if __name__ == '__main__':
     mocap_app = MCPApplication()
     settings = MCPSettings()
-    # settings.set_tcp('127.0.0.1', 7001)
-    settings.set_udp(7001)
+    settings.set_udp( 7001)
+    # settings.set_udp(7001)
+    # settings.set_bvh_data(MCPBvhData.Binary)
     mocap_app.set_settings(settings)
     status, msg = mocap_app.open()
     if status:
@@ -906,38 +914,16 @@ if __name__ == '__main__':
     else:
         print ({'ERROR'}, 'Connect failed: {0}'.format(msg))
     startrec = MCPCommand(MCPCommands.CommandStartRecored)
-    # stoprec = MCPCommand(MCPCommands.CommandStopRecored)
-    # command.destroy_command()
-    # command.get_command_result_message()
-    # mocap_app.queued_server_command(startrec.handle)
-    mocap_app.close()
-    # def print_joint(joint):
-    #     print(joint.get_name())
-    #     print(joint.get_local_rotation())
-    #     print(joint.get_local_rotation_by_euler())
-    #     print(joint.get_local_position())
-        
-    #     children = joint.get_children()
-    #     for child in children:
-    #         print_joint(child)
-
-    # app = MCPApplication()
-    # settings = MCPSettings()
-    # settings.set_udp(7001)
-    # app.set_settings(settings)
-    # app.open()
+    # startrec.get_command_result_code()
+    while True:
+        evts = mocap_app.poll_next_event()
+        # for evt in evts:
+        #     startcap = MCPCommand(MCPCommands.CommandStartCapture)
+        #     startrec = MCPCommand(MCPCommands.CommandStartRecored)
+        time.sleep(5)
     # startrec = MCPCommand(MCPCommands.CommandStartRecored)
-    # while True:
-    #     evts = app.poll_next_event()
-    #     for evt in evts:
-    #         if evt.event_type == MCPEventType.AvatarUpdated:
-    #             avatar = MCPAvatar(evt.event_data.avatar_handle)
-    #             print(avatar.get_index())
-    #             # print(avatar.get_name())
-    #             print_joint(avatar.get_root_joint())
-    #         elif evt.event_type == MCPEventType.RigidBodyUpdated:
-    #             print('rigid body updated')
-    #         else:
-    #             print('unknow event')
-
-    #     time.sleep(10)
+    # # stoprec = MCPCommand(MCPCommands.CommandStopRecored)
+    # # command.destroy_command()
+    # startrec.get_command_result_message()
+    # # mocap_app.queued_server_command(startrec.handle)
+    # mocap_app.close()
