@@ -307,7 +307,7 @@ class MCPJoint(object):
         z = c_float()
         err = self.api.contents.GetJointLocalTransformation(pointer(x), pointer(y), pointer(z), self.handle)
         if err != MCPError.NoError:
-            return None
+            raise RuntimeError('Can not get joint local transformation: {0}'.format(MCPError._fields[err]))
         return x.value, y.value, z.value
 
     def get_default_local_position(self):
@@ -432,12 +432,12 @@ class MCPAvatar(object):
         joint_handle = MCPJointHandle()
         err = self.api.contents.GetAvatarJointByName(joint_name, pointer(joint_handle), self.handle)
         if err != MCPError.NoError:
-            return None
+            raise RuntimeError('Can not get avatar Joints: {0}'.format(MCPError._fields[err]))
         return MCPJoint(joint_handle)
 
     def get_name(self):
         avatar_name = c_char_p()
-        err = self.api.contents.GetName(pointer(avatar_name), self.handle)
+        err = self.api.contents.GetAvatarName(pointer(avatar_name), self.handle)
         if err != MCPError.NoError:
             raise RuntimeError('Can not get avatar name: {0}'.format(MCPError._fields[err]))
         return str(avatar_name.value, encoding='utf8')
@@ -482,7 +482,6 @@ MCPEventType = namedtuple('EMCPEventType', [
     'AvatarUpdated', 
     'RigidBodyUpdated',
     'Error'
-    
 ])(0, 256, 512, 768)
 
 class MCPEvent(Structure):
@@ -901,29 +900,46 @@ class MCPApplication(object):
         if err != MCPError.NoError:
             raise RuntimeError('Can not queue server command: {0}'.format(MCPError._fields[err]))
 
+def print_joint(joint):
+    print(joint.get_name())
+    print(joint.get_local_rotation())
+    print(joint.get_local_rotation_by_euler())
+    print(joint.get_local_position())
+    
+    children = joint.get_children()
+    for child in children:
+        print_joint(child)
+
 if __name__ == '__main__':
     mocap_app = MCPApplication()
     settings = MCPSettings()
-    settings.set_udp( 7001)
-    # settings.set_udp(7001)
-    # settings.set_bvh_data(MCPBvhData.Binary)
+    # Axis Studio->Settings->BVH Broadcasting->Check Capture/Edit
+    #settings.set_udp_server('127.0.0.1', 7002)
+    settings.set_udp(7002)
     mocap_app.set_settings(settings)
     status, msg = mocap_app.open()
     if status:
         print ('Connect Successful')
     else:
         print ({'ERROR'}, 'Connect failed: {0}'.format(msg))
-    startrec = MCPCommand(MCPCommands.CommandStartRecored)
+    startcap = MCPCommand(MCPCommands.CommandStartCapture)
+    # startrec = MCPCommand(MCPCommands.CommandStartRecored)
     # startrec.get_command_result_code()
     while True:
         evts = mocap_app.poll_next_event()
-        # for evt in evts:
-        #     startcap = MCPCommand(MCPCommands.CommandStartCapture)
-        #     startrec = MCPCommand(MCPCommands.CommandStartRecored)
-        time.sleep(5)
-    # startrec = MCPCommand(MCPCommands.CommandStartRecored)
-    # # stoprec = MCPCommand(MCPCommands.CommandStopRecored)
-    # # command.destroy_command()
+        for evt in evts:
+            if evt.event_type == MCPEventType.AvatarUpdated:
+                avatar = MCPAvatar(evt.event_data.avatar_handle)
+                print(avatar.get_index())
+                print(avatar.get_name())
+                print_joint(avatar.get_root_joint())
+            elif evt.event_type == MCPEventType.RigidBodyUpdated:
+                print('rigid body updated')
+            else:
+                print('unknow event')
+        time.sleep(1)
+    # stoprec = MCPCommand(MCPCommands.CommandStopRecored)
+    # command.destroy_command()
     # startrec.get_command_result_message()
     # # mocap_app.queued_server_command(startrec.handle)
     # mocap_app.close()

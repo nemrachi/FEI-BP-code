@@ -30,6 +30,7 @@ run mocap_api/mocap_api.py
   - [MocapApi official? python repo](https://github.com/cachtayl-peeldev/MocapApi)
 - [NEURON MOCAP LIVE Plugin for C4D official repo](https://github.com/pnmocap/neuron_mocap_live-c4d)
 - [BVH format explained](https://www.cs.cityu.edu.hk/~howard/Teaching/CS4185-5185-2007-SemA/Group12/BVH.html)
+- [Perception Neuron docs](https://support.neuronmocap.com/hc/en-us)
 
 <!-- black - autoformatting code -->
 <!-- pylint - linter -->
