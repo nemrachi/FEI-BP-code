@@ -22,3 +22,5 @@ from .mocap_api import MCPPreDefinedRenderSettings
 from .mocap_api import MCPUnit
 from .mocap_api import MCPRenderSettings
 from .mocap_api import MCPApplication
+from .mocap_api import print_joint
+from .mocap_api import print_error
