@@ -5,9 +5,9 @@ import time
 import os
 
 MocapApi = cdll.LoadLibrary(os.path.join(os.path.dirname(__file__), {
-    'DarWin' : '',
+    'Windows' : '../windows/MocapApi.dll',
     'Linux' : '',
-    'Windows' : '../windows/MocapApi.dll'
+    'DarWin' : '' # macOS
 }[system()]))
 # MocapApi = cdll.LoadLibrary('../windows/MocapApi.dll')
 
@@ -895,23 +895,22 @@ class MCPApplication(object):
         if evt_count.value == 0:
             return []
         return [evt_array[i] for i in range(evt_count.value)]
+
     def queued_server_command(self, command):
         err = self.api.contents.QueuedServerCommand(command.handle, self._handle)
         if err != MCPError.NoError:
             raise RuntimeError('Can not queue server command: {0}'.format(MCPError._fields[err]))
 
-def print_joint(joint):
-    print(joint.get_name())
-    print(joint.get_local_rotation())
-    print(joint.get_local_rotation_by_euler())
-    print(joint.get_local_position())
-    
-    children = joint.get_children()
-    for child in children:
-        print_joint(child)
+class Utils:
+    def print_joint(joint):
+        print('{0} {1} {2} {3}'.format(joint.get_name(), joint.get_local_rotation(), joint.get_local_rotation_by_euler(), joint.get_local_position()))
 
-def print_error(evt):
-    print('Error/Unkown event: {0}'.format(MCPError._fields[evt.event_data.error]))
+        children = joint.get_children()
+        for child in children:
+            Utils.print_joint(child)
+
+    def print_error(evt):
+        print('Error --> {0} <--'.format(MCPError._fields[evt.event_data.error]))
 
 # working capturing example
 # if __name__ == '__main__':
