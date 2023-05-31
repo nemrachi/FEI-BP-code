@@ -11,7 +11,7 @@ run mocap_api/mocap_api.py
     - `__init__.py` = required part of packages (imports functions from mocap_api.py)
     - `mocap_api.py` = MocapApi SDK python rework (used ctypes)
 - `windows/` = MocapApi SDK .dll
-- `captured_data.txt` = captured mocap data
+- `live_data.txt` = captured mocap data
 - `pn3.py` = playground
 - `remote_record.py` = testing?
 
