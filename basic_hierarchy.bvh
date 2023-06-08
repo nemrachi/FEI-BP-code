@@ -346,3 +346,6 @@ ROOT Hips
         }
     }
 }
+MOTION
+Frames: 0
+Frame Time: 0.016667

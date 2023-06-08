@@ -23,6 +23,7 @@ def poll_data():
     for mcp_evt in mcp_evts:
         if mcp_evt.event_type == MCPEventType.AvatarUpdated:
             avatar = MCPAvatar(mcp_evt.event_data.avatar_handle)
+            # print_joint(avatar.get_root_joint())
             # animate_armatures(ctx, avatar)
 
 def axisConnect():
@@ -30,7 +31,7 @@ def axisConnect():
     settings = MCPSettings()
     mocap_app.set_settings(settings)
     # settings.set_tcp('127.0.0.1', 7001)
-    settings.set_udp_server('127.0.0.1', 7001)
+    settings.set_udp_server('255.255.255.255', 8903)
     # settings.set_bvh_data(MCPBvhData.Binary)
     if mocap_app.is_opened() :
         mocap_app.close()
@@ -50,9 +51,12 @@ def axisDisconnect():
 def axisStartRecord():
     err = MCPCommand(MCPCommands.CommandStartRecored)
     
-
 def axisStopRecord():
     command = MCPCommand(MCPCommands.CommandStopRecored)
+
+def startCapture():
+    print("stopping capture")
+    command = MCPCommand(MCPCommands.CommandStartCapture)
 
 def stopCapture():
     print("stopping capture")
@@ -61,5 +65,6 @@ def stopCapture():
 if __name__ == '__main__':
     init_mocap_api()
     axisConnect()
-    axisStartRecord()
+    startCapture()
+    poll_data()
     axisDisconnect()
