@@ -7,7 +7,7 @@ import socket
 from transforms3d.euler import euler2mat
 
 # EXAMPLE HOW TO RUN SCRIPT
-# py render.py --bvh=./resources/zdvihnutie_p_ruky_chr01.bvh
+# py bvhrender.py --bvh=./resources/zdvihnutie_p_ruky_chr01.bvh
 
 ##JOINT#CLASS###################################################################
 class Joint:

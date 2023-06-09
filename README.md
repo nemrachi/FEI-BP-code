@@ -2,7 +2,9 @@
 Python BVH data parser and render for Axis Studio of Noitom Perception Neuron 3 motion capture suit
 
 ### Start
-run mocap_api/mocap_api.py
+`py bvhrender.py` = expects live data from Axis Studio
+
+`py bvhrender.py --bvh=./resources/zdvihnutie_p_ruky_chr01.bvh`
 
 ### Structure of project:
 - `docs/` = MocapApi SDK official documentation and files from analysis
