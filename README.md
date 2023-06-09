@@ -1,31 +1,31 @@
 # FEI STU bachelor thesis: mocap-python
-Python data processor for Axis Studio of NOITOM Perception Neuron 3 motion capture suit
+Python BVH data parser and render for Axis Studio of Noitom Perception Neuron 3 motion capture suit
 
 ### Start
 run mocap_api/mocap_api.py
 
 ### Structure of project:
-- `docs/` = MocapApi SDK official documentation
-- `mocap_api/` = MocapApi SDK python package by cachtayl-peeldev
-    - `__pycache__/` = created when mocap_api.py is imported and run
-    - `__init__.py` = required part of packages (imports functions from mocap_api.py)
-    - `mocap_api.py` = MocapApi SDK python rework (used ctypes)
-- `windows/` = MocapApi SDK .dll
-- `live_data.txt` = captured mocap data
-- `pn3.py` = playground
-- `remote_record.py` = testing?
-
-
+- `docs/` = MocapApi SDK official documentation and files from analysis
+- `mocap_api_example/` = MocapApi SDK python package by cachtayl-peeldev and some demo scripts
+    - `mocap_api/` = MocapApi SDK python package by cachtayl-peeldev
+        - `__pycache__/` = created when mocap_api.py is imported and run
+        - `__init__.py` = required part of packages (imports functions from mocap_api.py)
+        - `mocap_api.py` = MocapApi SDK python rework (used ctypes)
+    - `windows/` = MocapApi SDK .dll
+    - `pn3.py` = MocapApi playground
+    - `remote_record.py` = MocapApi demo
+    - `send_data.py` = Axis Studio playground
+- `.gitignorr` = ignored files for git
+- `basic_hierarchy.bvh` = BVH hierarchy, when live motion data is used (in live data no hierarchy is provided)
+- `bvhrender.py` = script for parsing and rendering data
+- `live_data.txt` = captured mocap data for analysis purposes
+- `README.md` = readme
 
 ## TODO
-- **DRAW DATA** with something
-- **LIVE PROCESSING** + bonus: server without Axis Studio
-- **popisat projekt ako SWI projekt (schema poprepajania, viac technicky popis)**
-- porovnat nejake kniznice na bvh spracovanie/vykreslovanie (ak nepojde live processing)
-- print gestures in console + to file?
+- **LIVE PROCESSING** + bonus: Axis Studio on another pc
 - ~~add package (project) to PyPI (pyproject.toml, run python -m pip install .) (save project as library/module?)~~
 
-### Source/repository links:
+### Source links:
 - [MocapApi official repo](https://github.com/pnmocap/MocapApi)
   - [MocapApi official? python repo](https://github.com/cachtayl-peeldev/MocapApi)
 - [NEURON MOCAP LIVE Plugin for C4D official repo](https://github.com/pnmocap/neuron_mocap_live-c4d)
