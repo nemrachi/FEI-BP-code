@@ -1,6 +1,9 @@
 # FEI STU bachelor thesis: mocap-python
 Python BVH data parser and render for Axis Studio of Noitom Perception Neuron 3 motion capture suit
 
+### Instal libraries
+`pip install -r requirements.txt`
+
 ### Start
 `py bvhrender.py` = expects live data from Axis Studio
 

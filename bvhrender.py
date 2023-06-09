@@ -6,6 +6,9 @@ import re
 import socket
 from transforms3d.euler import euler2mat
 
+# INSTALL REQUIRED LIBRARIES
+# pip install -r requirements.txt
+
 # EXAMPLE HOW TO RUN SCRIPT
 # py bvhrender.py --bvh=./resources/zdvihnutie_p_ruky_chr01.bvh
 
